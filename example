@@ -1,0 +1,106 @@
+#source todo-api/flask/bin/activate & source dato-env/bin/activate
+#source myproject/venv/bin/activate   <---for flask on hive centos
+#pip install flask
+#^^^ORDER MATTERS FOR LINE ABOVE
+
+#http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
+
+from flask import Flask, jsonify, abort, redirect, request, make_response, url_for, send_from_directory
+import os
+import glob
+#from werkzeug import secure_filename, SharedDataMiddleware
+
+#need to create foo/data/ folder
+UPLOAD_FOLDER = '/foo/data/'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'])
+
+middle = Flask(__name__)
+middle.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+u='blah'
+
+#this removes previous files in upload folder
+files = glob.glob('/foo/data/*')
+for f in files:
+    os.remove(f)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+@middle.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        file.save(os.path.join(middle.config['UPLOAD_FOLDER'], file.filename))
+        return redirect(url_for('uploaded_file',
+                                    filename=file.filename))
+
+@middle.route('/uploads/<filename>')
+def uploaded_file(filename):
+    #f = send_from_directory(middle.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(middle.config['UPLOAD_FOLDER'], filename)
+
+#-----------------------------------------------------------------------    
+#source dato-env/bin/activate
+#python
+import graphlab as gl
+from math import sqrt
+
+@middle.route('/correlations')
+def index():
+    #FOLLOWING LINE NEEDS TO BE REMOVED, IT IS JUST FOR TESTING
+    #f='parking_violations_short.csv'
+    just_filename=glob.glob("/foo/data/*.csv")
+    just_filename_str = ''.join(just_filename)
+    data_filename = just_filename_str
+    #print data_filename
+    col_types = [int] + [float] * 42
+    fnc_sf = gl.SFrame.read_csv(data_filename)
+
+    n = len(fnc_sf)
+    k = int(sqrt(n / 2.0))
+
+    original_model = gl.kmeans.create(fnc_sf, num_clusters=k)
+
+    #sorted model
+    model = original_model['cluster_info'].sort('size', ascending = False)
+
+    wo = model['Violation Code']
+    xo = model['Violation Location']
+    yo = model['size']
+    zo = model[['Violation Code','Violation Location']]
+
+    w=list(wo)
+    x=list(xo)
+    y=list(yo)
+    z=list(zo)
+
+    s = 'The violations codes that occured most (in descending order):' + repr(w)
+    #print s
+
+    t = 'The locations where violations occured most (in descending order):' + repr(x)
+    #print t
+
+    u = 'The violation_codes:violation_location combos that were most correlated (in descending order):' + repr(z)
+    print "ok"
+
+    g = u
+    return g
+#'''and None
+
+#while(True):
+if __name__ == '__main__':
+    middle.run(port = 9000, debug=True)
+
+#USER NEEDS TO RUN THE FOLLOWING COMMANDS IN PYTHON ONCE THIS PROGRAM IS DONE RUNNING:
+#FOR UPLOADS RUN THIS:
+#import requests
+#files = {'file': ('parking_violations_short.csv', open('parking_violations_short.csv', 'rb'), 'text/csv', {'Expires': '0'})}
+#r = requests.post('http://127.0.0.1:9000', files=files)
+#r.text    #for test of what was uploaded
+
+#FOR DOWNLOADS RUN THIS:
+#import requests
+#r = requests.get('http://127.0.0.1:9000/correlations')
+#r.text
