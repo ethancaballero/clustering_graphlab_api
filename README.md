@@ -1,6 +1,6 @@
 
-#USER NEEDS TO RUN THE FOLLOWING COMMANDS IN PYTHON ONCE THIS PROGRAM IS DONE RUNNING:
-#FOR UPLOADS RUN THIS:
+#User needs to run the following commands in python once the program is done running:
+#for uploads run this:
 
 import requests
 
@@ -10,7 +10,7 @@ r = requests.post('http://127.0.0.1:9000', files=files)
 
 r.text    #for test of what was uploaded
 
-#FOR DOWNLOADS RUN THIS:
+#for downloads tun this:
 
 import requests
 
