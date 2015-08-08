@@ -10,7 +10,7 @@ r = requests.post('http://127.0.0.1:9000', files=files)
 
 r.text    #for test of what was uploaded
 
-#for downloads tun this:
+#for downloads run this:
 
 import requests
 
